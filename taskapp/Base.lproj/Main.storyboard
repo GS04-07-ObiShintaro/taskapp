@@ -74,6 +74,7 @@
                     </navigationItem>
                     <connections>
                         <outlet property="categorySearch" destination="czD-b2-bC2" id="1Rb-Ta-hdp"/>
+                        <outlet property="purasuButton" destination="ydz-JR-UI1" id="7Jq-vv-Hhm"/>
                         <outlet property="searchDisplayController" destination="omv-Os-43B" id="L5U-9l-i9V"/>
                         <outlet property="tableView" destination="s1Q-ao-3XY" id="2Yq-EA-Gou"/>
                         <segue destination="4xn-YU-8zG" kind="show" identifier="cellSegue" id="bHT-Lh-UQF"/>
@@ -203,7 +204,7 @@
         </scene>
     </scenes>
     <inferredMetricsTieBreakers>
-        <segue reference="bHT-Lh-UQF"/>
+        <segue reference="euM-Cd-OrZ"/>
     </inferredMetricsTieBreakers>
     <color key="tintColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
 </document>

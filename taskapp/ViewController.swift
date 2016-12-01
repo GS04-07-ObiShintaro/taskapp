@@ -16,10 +16,12 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     // Realmインスタンスを取得する
     let realm = try! Realm()
     var searchResult : [String] = []
+    var searchResultDate : [String] = []
+    var searchResultID : [Int] = []
+    var soteIdToId : [Int] = []
     @IBOutlet weak var tableView: UITableView!
     @IBOutlet weak var categorySearch: UISearchBar!
-    
-    //let result = realm.objects(Task).filter("category = 'nn'")
+    @IBOutlet weak var purasuButton: UIBarButtonItem!
 
     // DB内のタスクが格納されるリスト。
     // 日付近い順\順でソート：降順
@@ -30,6 +32,9 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     // 入力画面から戻ってきた時に TableView を更新させる
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        categorySearch.text = ""
+        categorySearch.showsCancelButton = false
+        purasuButton.isEnabled = true
         tableView.reloadData()
     }
     
@@ -37,14 +42,14 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
-        //tableView.register(UITableViewCell.self, forCellReuseIdentifier: "cell")
         tableView.delegate = self
         tableView.dataSource = self
         
         categorySearch.delegate = self
         categorySearch.searchBarStyle = UISearchBarStyle.default
-        //categorySearch.showsSearchResultsButton = false
+        categorySearch.showsSearchResultsButton = false
         categorySearch.setValue("キャンセル", forKey: "_cancelButtonText")
+        categorySearch.tintColor = UIColor.red
         
     }
     
@@ -56,8 +61,11 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     // MARK: UITableViewDataSourceプロトコルのメソッド
     // データの数（＝セルの数）を返すメソッド
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        
-           return taskArray.count  // ←追加する
+        if(categorySearch.text == ""){
+           return taskArray.count
+        }else{
+           return searchResult.count
+        }
     }
     
     
@@ -65,17 +73,23 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         // 再利用可能な cell を得る
         let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath as IndexPath)
-        
+        if(categorySearch.text == ""){
             // Cellに値を設定する.
             let task = taskArray[indexPath.row]
-            cell.textLabel?.text = task.title + "::" + task.category + "::"
+            cell.textLabel?.text = task.title + "::" + task.category + "::" + "\(task.id)" + ":::" + "\(indexPath.row)"
         
             let formatter = DateFormatter()
             formatter.dateFormat = "yyyy-MM-dd HH:mm"
         
             let dateString:String = formatter.string(from: task.date as Date)
             cell.detailTextLabel?.text = dateString
-        
+        }else{
+            let task = searchResult[indexPath.row]
+            let taskDate = searchResultDate[indexPath.row]
+            let taskID = searchResultID[indexPath.row]
+            cell.textLabel?.text = task + "\(taskID)" + ":::" + "\(indexPath.row)"
+            cell.detailTextLabel?.text = taskDate
+        }
             return cell
     }
     
@@ -120,20 +134,36 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     // segue で画面遷移するに呼ばれる
     override func prepare(for segue: UIStoryboardSegue, sender: Any?){
         let inputViewController:InputViewController = segue.destination as! InputViewController
-        
-        if segue.identifier == "cellSegue" {
-            let indexPath = self.tableView.indexPathForSelectedRow
-            inputViewController.task = taskArray[indexPath!.row]
-        } else {
-            let task = Task()
-            task.date = NSDate()
-            
-            if taskArray.count != 0 {
-                task.id = taskArray.max(ofProperty: "id")! + 1
+        // f : soteID　--> ID
+        if(taskArray.count >= 1){
+            for i in (0...taskArray.count-1){
+                soteIdToId.append(taskArray[i].id)
             }
-            
-            inputViewController.task = task
         }
+            if segue.identifier == "cellSegue" {
+                let indexPath = self.tableView.indexPathForSelectedRow
+                if(categorySearch.text == ""){
+                    inputViewController.task = taskArray[indexPath!.row]
+                }else{
+                    let resultID = searchResultID[indexPath!.row]
+                    var finishSoteID : Int = 0
+                    for i in (0...taskArray.count-1){
+                        if(resultID == soteIdToId[i]){
+                             finishSoteID = i
+                        }
+                    }
+                    inputViewController.task = taskArray[finishSoteID]
+                }
+            } else {
+                let task = Task()
+                task.date = NSDate()
+                
+                if taskArray.count != 0 {
+                    task.id = taskArray.max(ofProperty: "id")! + 1
+                }
+                
+                inputViewController.task = task
+            }
     }
     
     
@@ -141,26 +171,36 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     //searchBar
     // 検索ボタンが押された時に呼ばれる
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-         self.view.endEditing(true)
-//        searchBar.showsCancelButton = true
-        //let result = realm.objects(Task.self).filter("category = 'nn'")
-//        for data in result{
-//            searchResult.append("\(data.title)")
-//        }
-        self.tableView.reloadData()
+          self.view.endEditing(true)
+          searchBar.showsCancelButton = true
+          purasuButton.isEnabled = false
+          let formatter = DateFormatter()
+          formatter.dateFormat = "yyyy-MM-dd HH:mm"
+        
+          let result = realm.objects(Task.self).filter("category = '\(searchBar.text!)'")
+          for data in result{
+            searchResult.append("\(data.title)")
+            searchResultDate.append("\(formatter.string(from: data.date as Date))")
+            searchResultID.append(data.id)
+          }
+          self.tableView.reloadData()
     }
     
     // キャンセルボタンが押された時に呼ばれる
     func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
-//        searchBar.showsCancelButton = false
+          searchBar.showsCancelButton = false
+          purasuButton.isEnabled = true
           self.view.endEditing(true)
+          searchResult = []
+          searchResultDate = []
+          searchResultID = []
           searchBar.text = ""
           self.tableView.reloadData()
     }
     
     // テキストフィールド入力開始前に呼ばれる
     func searchBarShouldBeginEditing(_ searchBar: UISearchBar) -> Bool {
-        //searchBar.showsCancelButton = true
+        searchBar.showsCancelButton = true
         return true
     }
 
