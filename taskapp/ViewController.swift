@@ -35,6 +35,9 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         categorySearch.text = ""
         categorySearch.showsCancelButton = false
         purasuButton.isEnabled = true
+        searchResult = []
+        searchResultDate = []
+        searchResultID = []
         tableView.reloadData()
     }
     
@@ -76,7 +79,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         if(categorySearch.text == ""){
             // Cellに値を設定する.
             let task = taskArray[indexPath.row]
-            cell.textLabel?.text = task.title + "::" + task.category + "::" + "\(task.id)" + ":::" + "\(indexPath.row)"
+            cell.textLabel?.text = task.title + "::" + task.category + "::"
         
             let formatter = DateFormatter()
             formatter.dateFormat = "yyyy-MM-dd HH:mm"
@@ -86,8 +89,8 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         }else{
             let task = searchResult[indexPath.row]
             let taskDate = searchResultDate[indexPath.row]
-            let taskID = searchResultID[indexPath.row]
-            cell.textLabel?.text = task + "\(taskID)" + ":::" + "\(indexPath.row)"
+            //let taskID = searchResultID[indexPath.row]
+            cell.textLabel?.text = task
             cell.detailTextLabel?.text = taskDate
         }
             return cell
