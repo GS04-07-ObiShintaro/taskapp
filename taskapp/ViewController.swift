@@ -79,7 +79,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         if(categorySearch.text == ""){
         //通常時
             let task = taskArray[indexPath.row]
-            cell.textLabel?.text = task.title
+            cell.textLabel?.text = task.title + "  :::" + task.category + ":::"
             let formatter = DateFormatter()
             formatter.dateFormat = "yyyy-MM-dd HH:mm"
             let dateString:String = formatter.string(from: task.date as Date)
