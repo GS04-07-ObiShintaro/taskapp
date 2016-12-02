@@ -77,19 +77,17 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         // 再利用可能な cell を得る
         let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath as IndexPath)
         if(categorySearch.text == ""){
-            // Cellに値を設定する.
+        //通常時
             let task = taskArray[indexPath.row]
-            cell.textLabel?.text = task.title + "::" + task.category + "::"
-        
+            cell.textLabel?.text = task.title
             let formatter = DateFormatter()
             formatter.dateFormat = "yyyy-MM-dd HH:mm"
-        
             let dateString:String = formatter.string(from: task.date as Date)
             cell.detailTextLabel?.text = dateString
+        //検索時
         }else{
             let task = searchResult[indexPath.row]
             let taskDate = searchResultDate[indexPath.row]
-            //let taskID = searchResultID[indexPath.row]
             cell.textLabel?.text = task
             cell.detailTextLabel?.text = taskDate
         }
@@ -137,27 +135,18 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     // segue で画面遷移するに呼ばれる
     override func prepare(for segue: UIStoryboardSegue, sender: Any?){
         let inputViewController:InputViewController = segue.destination as! InputViewController
-        // f : soteID　--> ID
-        if(taskArray.count >= 1){
-            for i in (0...taskArray.count-1){
-                soteIdToId.append(taskArray[i].id)
-            }
-        }
-            if segue.identifier == "cellSegue" {
+        if segue.identifier == "cellSegue" {
                 let indexPath = self.tableView.indexPathForSelectedRow
                 if(categorySearch.text == ""){
+                    //通常時
                     inputViewController.task = taskArray[indexPath!.row]
                 }else{
-                    let resultID = searchResultID[indexPath!.row]
-                    var finishSoteID : Int = 0
-                    for i in (0...taskArray.count-1){
-                        if(resultID == soteIdToId[i]){
-                             finishSoteID = i
-                        }
-                    }
-                    inputViewController.task = taskArray[finishSoteID]
+                    //検索時
+                    let resultID : Int = searchResultID[indexPath!.row]
+                    let resultTask = realm.objects(Task.self).filter("id = \(resultID)")
+                    inputViewController.task = resultTask[0]
                 }
-            } else {
+        } else {
                 let task = Task()
                 task.date = NSDate()
                 
@@ -166,7 +155,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
                 }
                 
                 inputViewController.task = task
-            }
+        }
     }
     
     
